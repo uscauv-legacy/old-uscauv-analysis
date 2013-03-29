@@ -52,7 +52,7 @@ for i = 1:length(trainingspaces)
     [positiveexamples, negativeexamples] = labeldata(trainingexamples, ...
                                                      trainingspaces{i}, ...
                                                      scale);
-    plotimages(positiveexamples, negativeexamples, trainingspaces{i});
+    %    plotimages(positiveexamples, negativeexamples, trainingspaces{i});
 
     tic
     allexamples = [positiveexamples; negativeexamples];

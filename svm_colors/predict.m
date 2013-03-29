@@ -15,7 +15,7 @@ function [predictions] = predict(svm_struct, trainingexamples, ...
 
         predictions{j} = cout;
 
-        keyboard;
+        %        keyboard;                       % 
     end
     
 end
