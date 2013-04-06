@@ -25,7 +25,8 @@ trainingexamples = struct();
 labTransform = makecform('srgb2lab');   % 
 
 scale         = 0.0625;  
-trainingspaces= {'rgbimage', 'hsvimage', 'labimage'};
+%trainingspaces= {'rgbimage', 'hsvimage', 'labimage'};
+trainingspaces= {'rgbimage'};
 
 % trainingspace = 'hsvimage';             
 % trainingspace = 'labimage';             
@@ -70,21 +71,7 @@ for i = 1:length(trainingspaces)
     
     predictions.(trainingspaces{i}) = predict(svm_struct, trainingexamples, ...
                                              trainingspaces{i});
-%    
-%    for j=1:length(trainingexamples)
-%        cimage = trainingexamples(j).(trainingspaces{i});
-%        csize = size(cimage);
-%        cin = double(resize(squeeze(reshape(cimage, [], 1, 3)), 0.5));
-%        keyboard;
-%        cout = svmclassify(svm_struct, cin);
-%        cout = reshape(cout, csize(1), csize(2));
-%        figure(1); clf;
-%        imshow(cimage);
-%        figure(2); clf;
-%        imshow(cout);
-%        keyboard;
-%    end
-%        
+    
 end
 
 
