@@ -3,8 +3,10 @@
 
 using namespace std;
 
+#define RED Scalar(0,0,255)
+#define BLUE Scalar(255,0,0)
 #define GREEN Scalar(0,255,0)
-#define RED Scalar(255,0,0)
+#define WHITE Scalar(255,255,255)
 
 typedef vector<SearchNode> SearchNodeContainer;
 typedef vector<SearchNode> SuccessorNodeContainer;
@@ -60,7 +62,8 @@ int main(int argc, char** argv)
 		IntersectsContainer initial_intersect_;
 		
 		SearchNode initial_node_(transform_.getIntersects(0), initial_intersect_);
-
+		//TODO: add all intersects to open_nodes_
+		
 		SearchNode search_node_ = initial_node_;
 		open_nodes_.push_back(search_node_);
 
@@ -86,27 +89,27 @@ int main(int argc, char** argv)
 			// If the new node is the goal state, store it
 			if(search_node_.isRectangle(theta_error_, theta_))
 			{
+				search_node_.addIntersectToCorners();
 				rectangles_.push_back(search_node_);
+				break;
 			}
+			printf("-------------------------------------------\n");
 		}
 		
 		printf("Number of rectangles detected: %d \n", rectangles_.size());
 	
-		image_dst_ = transform_.getImageSrc();
-		drawDetectedRectangles(rectangles_, image_dst_);
-	
 		//imshow("Source", transform.image_src);
-		//imshow("Hough Lines", transform.image_dst_color);
-		//imshow("Rectangles", image_dst_);
+		imshow("Hough Lines", transform_.getImageDstColor());
 		
-		//cv::waitKey(0);
+		image_dst_ = transform_.getImageDstColor();
+		drawDetectedRectangles(rectangles_, image_dst_);
+		imshow("Rectangles", image_dst_);
+		
+		cv::waitKey(0);
 	
 		return 0;
 	}
-	else 
-	{
-		printf("Not enough intersections detected. \n");
-	}
+	else { printf("Not enough intersections detected. \n"); }
 }
 
 // Compare successor node to all closed or open nodes
@@ -141,11 +144,11 @@ void addSuccessorsToOpenList(const SuccessorNodeContainer &successor_nodes, Open
 	}
 }
 
-//TODO: Investigate this function
 // Expand a node
 void expandNode(SearchNode search, const IntersectsContainer &intersects, SuccessorNodeContainer &successor_nodes)
 {
 	search.getIntersect().print("Expanding node: ");
+	search.printCorners("");
 	successor_nodes.clear();
 	IntersectsContainer valid_intersects = search.findValidIntersects(intersects);
 	printf("Number of valid intersect successors: %d \n", valid_intersects.size());
@@ -161,9 +164,11 @@ void expandNode(SearchNode search, const IntersectsContainer &intersects, Succes
 SearchNode nextNode(OpenNodeContainer &open_nodes, int &index, double theta)
 {
 	index = 0;
-	for(OpenNodeContainer::iterator it = open_nodes.begin(); it != open_nodes.end(); ++it){
-		if((it->differenceFromAngle(theta) + it->getCornersSize())<
-		   (open_nodes[index].differenceFromAngle(theta)) + open_nodes[index].getCornersSize()){
+	for(OpenNodeContainer::iterator it = open_nodes.begin(); it != open_nodes.end(); ++it)
+	{
+		if((it->differenceFromAngle(theta) + it->getCornersSize()) <
+		   (open_nodes[index].differenceFromAngle(theta)) + open_nodes[index].getCornersSize())
+		{
 			index = (it - open_nodes.begin());
 		}
 	}
@@ -177,12 +182,17 @@ void drawDetectedRectangles(const RectangleContainer &rectangles, Mat &image)
 	int ii = 0;
 	for(RectangleContainer::const_iterator it = rectangles.begin(); it != rectangles.end(); ++it)
 	{
-		for(int i = 0; i < 4; i++){
-			if(i < 3) ii = (i + 1);
-			else ii = 0;
+		it->printCorners("");
+		for(int i = 0; i < 4; i++)
+		{
+			if(i < 3) { ii = (i + 1); }
+			else { ii = 0; }
+			
+			printf("Drawing edge: %d \n", i);
+			it->getCorners(i).print("");
 			
 			line(image, it->getCorners(i).getIntersect(), it->getCorners(ii).getIntersect(), GREEN, 3, CV_AA);
-			circle(image, it->getCorners(i).getIntersect(), 3, RED, -1, 8, 0);
+			circle(image, it->getCorners(i).getIntersect(), 3, WHITE, -1, 8, 0);
 		}
 	}
 }

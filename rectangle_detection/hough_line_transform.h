@@ -10,8 +10,9 @@
 
 using namespace std;
 
-#define BLUE Scalar(0,0,255)
-#define RED Scalar(255,0,0)
+#define RED Scalar(0,0,255)
+#define BLUE Scalar(255,0,0)
+#define GREEN Scalar(0,255,0)
 
 class HoughLineTransform 
 {
@@ -186,9 +187,9 @@ void HoughLineTransform::calculateSegments(int i)
 
 void HoughLineTransform::drawDetectedLines(int i)
 {		
-	line(image_dst_color_, segments_[i].getEndpoint(1), segments_[i].getEndpoint(2), BLUE, 3, CV_AA);
-	circle(image_dst_color_, segments_[i].getEndpoint(1), 3, RED, -1, 8, 0);
-	circle(image_dst_color_, segments_[i].getEndpoint(2), 3, RED, -1, 8, 0);
+	line(image_dst_color_, segments_[i].getEndpoint(1), segments_[i].getEndpoint(2), RED, 3, CV_AA);
+	circle(image_dst_color_, segments_[i].getEndpoint(1), 3, BLUE, -1, 8, 0);
+	circle(image_dst_color_, segments_[i].getEndpoint(2), 3, BLUE, -1, 8, 0);
 }
 
 void HoughLineTransform::calculateIntersections(int i)
@@ -216,7 +217,7 @@ void HoughLineTransform::calculateIntersections(int i)
 				
 				if(!match){
 					// Draw intersection
-					circle(image_dst_color_, intersects_.back().getIntersect(), 3, Scalar(0,255,0), -1, 8, 0);		
+					circle(image_dst_color_, intersects_.back().getIntersect(), 3, GREEN, -1, 8, 0);		
 				}
 			}
 		}	

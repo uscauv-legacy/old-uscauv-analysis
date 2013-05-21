@@ -26,10 +26,12 @@ class SearchNode
 		int getCornersSize() const;
 		void addToCorners(Intersect);
 		bool operator== (const SearchNode &) const;
-		void printCorners() const;
+		void addIntersectToCorners();
+		void printCorners(string) const;
 		double differenceFromAngle(double) const;
 		bool isRectangle(double, double) const;
 		bool matchCorners(const CornersContainer &) const;
+		bool matchIntersectToCorners(const Intersect &) const;
 		IntersectsContainer findValidIntersects(const IntersectsContainer &) const;
 		SearchNode(Intersect, CornersContainer);
 		SearchNode();		
@@ -64,22 +66,35 @@ void SearchNode::addToCorners(Intersect i)
 bool SearchNode::operator== (const SearchNode &right) const
 {
     bool match_intersect = (intersect_ == right.getIntersect());
-    bool match_corners = true; //(matchCorners(right.getCorners()));
-    //((intersect_ == right.getIntersect()) && (matchCorners(right.getCorners())));
-    		
-    if(match_intersect) printf("Matched intersects. \n");
-    else printf("Intersects not matched! \n");
     
-    if(match_corners) printf("Matched corners. \n");
-    else printf("Corners not matched! \n");
+    if(match_intersect) { printf("Matched intersects. \n"); }
+    else { printf("Intersects not matched! \n"); }
     
+    bool match_corners = true;
+    if(match_intersect)
+    {
+    	printCorners("Corners: ");
+		right.printCorners("Corners to be matched: ");
+	    match_corners = (matchCorners(right.getCorners()));
+	    //((intersect_ == right.getIntersect()) && (matchCorners(right.getCorners())));
+    	if(match_corners) { printf("Matched corners. \n"); }
+     	else { printf("Corners not matched! \n"); }
+    }
     return (match_intersect && match_corners);
 }
 
-void SearchNode::printCorners() const
+void SearchNode::addIntersectToCorners()
 {
+	corners_.push_back(intersect_);
+}
+
+void SearchNode::printCorners(string input) const
+{
+	printf("%s", input.c_str());
 	for(CornersContainer::const_iterator it = corners_.begin(); it != corners_.end(); ++it)
-		printf("Corner: %d, %d", it->getIntersect().x, it->getIntersect().y);
+		printf("Corner: %d, %d ", it->getIntersect().x, it->getIntersect().y);
+		
+	printf("\n");
 }
 
 double SearchNode::differenceFromAngle(double angle) const
@@ -89,7 +104,7 @@ double SearchNode::differenceFromAngle(double angle) const
 
 bool SearchNode::isRectangle(double error, double angle) const
 {
-	if(corners_.size() == 4)
+	if(corners_.size() == 3)
 	{
 		printf("Node has 4 corners. \n");
 		for(CornersContainer::const_iterator it = corners_.begin(); it != corners_.end(); ++it)
@@ -109,7 +124,8 @@ bool SearchNode::isRectangle(double error, double angle) const
 
 bool SearchNode::matchCorners(const CornersContainer &c) const
 {
-	printf("Size of corners: %d \n", (int)c.size());
+	printf("Size of corners, corners to be matched: %d, %d \n", (int)corners_.size(), (int)c.size());
+	
 	if(corners_.size() != c.size())
 	{	
 		printf("Size of corners did not match. \n");
@@ -120,8 +136,8 @@ bool SearchNode::matchCorners(const CornersContainer &c) const
 	{
 		if(!(it->getIntersect() == c[it-corners_.begin()].getIntersect()))
 		{
-			it->print("Corner intersects not matched:");
-			c[it-corners_.begin()].print("Corner intersects not matched:");
+			it->print("Corner intersects not matched: ");
+			c[it-corners_.begin()].print("Corner intersects not matched: ");
 			return false;
 		}
 	}
@@ -129,18 +145,29 @@ bool SearchNode::matchCorners(const CornersContainer &c) const
 	return true;
 }
 
+bool SearchNode::matchIntersectToCorners(const Intersect &intersect) const
+{
+	for(CornersContainer::const_iterator it = corners_.begin(); it != corners_.end(); ++it)
+	{	if(intersect == *it) { return true; } }
+		
+	return false;
+}
+
 SearchNode::IntersectsContainer SearchNode::findValidIntersects(const IntersectsContainer &intersects) const
 {	
 	IntersectsContainer valid_intersects;
-	printf("Number of intersects for current node: %d \n", intersects.size());
 	for(IntersectsContainer::const_iterator it = intersects.begin(); it != intersects.end(); ++it)
 	{
 		if((it->getLine(1) == intersect_.getLine(1)) || (it->getLine(1) == intersect_.getLine(2)) ||
 		   (it->getLine(2) == intersect_.getLine(1)) || (it->getLine(2) == intersect_.getLine(2)))
 		{
-			if(!(*it == intersect_)){
-				valid_intersects.push_back(*it);
-				it->print("Intersect added to valid_intersects: ");
+			if(!(*it == intersect_))\
+			{
+				if(!matchIntersectToCorners(*it))
+				{
+					valid_intersects.push_back(*it);
+					it->print("Intersect added to valid_intersects: ");
+				}
 			}
 		}
 	}
