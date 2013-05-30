@@ -17,6 +17,7 @@ typedef vector<Intersect> IntersectsContainer;
 typedef cv::Mat Mat;
 typedef cv::Scalar Scalar;
 
+void addIntersectsToOpenNodes(OpenNodeContainer &, const IntersectsContainer &, const IntersectsContainer &);
 bool matchNodes(const SearchNode &, const SearchNodeContainer &);
 void addSuccessorsToOpenList(const SuccessorNodeContainer &, OpenNodeContainer &, ClosedNodeContainer &);
 void expandNode(SearchNode, const IntersectsContainer &, SuccessorNodeContainer &);
@@ -29,7 +30,8 @@ int main(int argc, char** argv)
 	double theta_, theta_error_;
 	int index_ = 0;
 	
-	if(argc < 4){ 
+	if(argc < 4)
+	{ 
 		fprintf(stderr, "ERROR: Specify input filename, search theta, and theta error.");
 		return 0;
 	}
@@ -62,11 +64,11 @@ int main(int argc, char** argv)
 		IntersectsContainer initial_intersect_;
 		
 		SearchNode initial_node_(transform_.getIntersects(0), initial_intersect_);
-		//TODO: add all intersects to open_nodes_
 		
 		SearchNode search_node_ = initial_node_;
 		open_nodes_.push_back(search_node_);
-
+		addIntersectsToOpenNodes(open_nodes_, transform_.getIntersects(), initial_intersect_);
+		
 		// Find a solution using manhattan distance
 		// While there are unexpanded nodes:
 		while(!open_nodes_.empty()){
@@ -110,6 +112,15 @@ int main(int argc, char** argv)
 		return 0;
 	}
 	else { printf("Not enough intersections detected. \n"); }
+}
+
+void addIntersectsToOpenNodes(OpenNodeContainer &open_nodes, const IntersectsContainer &intersects, const IntersectsContainer &initial_intersect)
+{
+	for(IntersectsContainer::const_iterator it = (intersects.begin() + 1); it != intersects.end(); ++it)
+	{ 
+		SearchNode initial_node(*it, initial_intersect); 
+		open_nodes.push_back(initial_node);
+	}
 }
 
 // Compare successor node to all closed or open nodes
