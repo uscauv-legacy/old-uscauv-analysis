@@ -3,6 +3,11 @@
 
 using namespace std;
 
+// TODO: Make rectangle_detection a class
+
+// Allow debug statements to be turned on and off
+bool debug_statements = false;
+
 #define RED Scalar(0,0,255)
 #define BLUE Scalar(255,0,0)
 #define GREEN Scalar(0,255,0)
@@ -32,9 +37,16 @@ int main(int argc, char** argv)
 	
 	if(argc < 4)
 	{ 
-		fprintf(stderr, "ERROR: Specify input filename, search theta, and theta error.");
+		fprintf(stderr, "ERROR: Must specify input filename, search theta, and theta error.");
 		return 0;
 	}
+	else if(argc == 5)
+	{
+		string str(argv[4]);
+		if(str.compare("debug") == 0)
+			debug_statements = true;
+	}
+	
 	
 	// Read in args
 	image_src_ = cv::imread(argv[1], 0);	
@@ -49,8 +61,8 @@ int main(int argc, char** argv)
 	
 	HoughLineTransform transform_(image_src_);
 	transform_.applyHoughLineTransform();
-	//imshow("Hough Lines", transform_.getImageDstColor());
-	//cv::waitKey(0);
+	imshow("Hough Lines", transform_.getImageDstColor());
+	cv::waitKey(0);
 	
 	if(transform_.getIntersectsSize() >= 4) 
 	{
@@ -73,40 +85,45 @@ int main(int argc, char** argv)
 		// While there are unexpanded nodes:
 		while(!open_nodes_.empty()){
 			open_nodes_.erase(open_nodes_.begin() + index_);
-			printf("Number of nodes in open_nodes: %d \n", open_nodes_.size());	
-			//if(open_nodes_.size() > 3) break;
+			if(debug_statements) printf("Number of nodes in open_nodes: %d \n", open_nodes_.size());	
+			
+			//if(open_nodes_.size() > 20) break;
 		
 			// Expand (find the successors of) the current node
 			expandNode(search_node_, transform_.getIntersects(), successor_nodes_);
-			printf("Node expanded.\n");
+			if(debug_statements) printf("Node expanded.\n");
+			
 			// Add the successors to the open list
 			addSuccessorsToOpenList(successor_nodes_, open_nodes_, closed_nodes_);
-			printf("Successors added to open list.\n");
+			if(debug_statements) printf("Successors added to open list.\n");
+			
 			// Move the current node (the one just expanded) to the closed list
 			closed_nodes_.push_back(search_node_);
-			printf("Current node closed.\n");
+			if(debug_statements) printf("Current node closed.\n");
+			
 			// Pick a new node with theta nearest 90 degrees to expand next
 			search_node_ = nextNode(open_nodes_, index_, theta_);
-			printf("New node found.\n");
+			if(debug_statements) printf("New node found.\n");
+			
 			// If the new node is the goal state, store it
 			if(search_node_.isRectangle(theta_error_, theta_))
 			{
 				search_node_.addIntersectToCorners();
 				rectangles_.push_back(search_node_);
-				break;
+				if(rectangles_.size() > 0) break;
 			}
-			printf("-------------------------------------------\n");
+			
+			if(debug_statements) printf("-------------------------------------------\n");
 		}
 		
-		printf("Number of rectangles detected: %d \n", rectangles_.size());
+		if(debug_statements) printf("Number of rectangles detected: %d \n", rectangles_.size());
 	
 		//imshow("Source", transform.image_src);
 		imshow("Hough Lines", transform_.getImageDstColor());
 		
 		image_dst_ = transform_.getImageDstColor();
 		drawDetectedRectangles(rectangles_, image_dst_);
-		imshow("Rectangles", image_dst_);
-		
+		imshow("Rectangles", image_dst_);	
 		cv::waitKey(0);
 	
 		return 0;
@@ -126,14 +143,14 @@ void addIntersectsToOpenNodes(OpenNodeContainer &open_nodes, const IntersectsCon
 // Compare successor node to all closed or open nodes
 bool matchNodes(const SearchNode &successor, const SearchNodeContainer &nodes)
 {
-	successor.getIntersect().print("Matching nodes to: ");
+	if(debug_statements) successor.getIntersect().print("Matching nodes to: ");
 	for(SearchNodeContainer::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
 	{
-		it->getIntersect().print("Node to match: ");
+		//if(debug_statements) it->getIntersect().print("Node to match: ");
 	
 		if(successor == *it)
 		{		
-			printf("Nodes matched! \n");
+			if(debug_statements) printf("Nodes matched! \n");
 			return true;
 		}
 	}
@@ -146,9 +163,9 @@ void addSuccessorsToOpenList(const SuccessorNodeContainer &successor_nodes, Open
 	for(SuccessorNodeContainer::const_iterator it = successor_nodes.begin(); it != successor_nodes.end(); ++it)
 	{		
 		if((!matchNodes(*it, closed_nodes)) &&	
-			(!matchNodes(*it, open_nodes)))
+		   (!matchNodes(*it, open_nodes)))
 		{
-			printf("Pushing back successor: ");
+			if(debug_statements) printf("Pushing back successor: ");
 			it->getIntersect().print("");
 			open_nodes.push_back(*it);
 		}
@@ -158,11 +175,11 @@ void addSuccessorsToOpenList(const SuccessorNodeContainer &successor_nodes, Open
 // Expand a node
 void expandNode(SearchNode search, const IntersectsContainer &intersects, SuccessorNodeContainer &successor_nodes)
 {
-	search.getIntersect().print("Expanding node: ");
+	if(debug_statements) search.getIntersect().print("Expanding node: ");
 	search.printCorners("");
 	successor_nodes.clear();
 	IntersectsContainer valid_intersects = search.findValidIntersects(intersects);
-	printf("Number of valid intersect successors: %d \n", valid_intersects.size());
+	if(debug_statements) printf("Number of valid intersect successors: %d \n", valid_intersects.size());
 	for(IntersectsContainer::iterator it = valid_intersects.begin(); it != valid_intersects.end(); ++it)
 	{
 		SearchNode node(*it, search.getCorners());
@@ -191,14 +208,15 @@ SearchNode nextNode(OpenNodeContainer &open_nodes, int &index, double theta)
 void drawDetectedRectangles(const RectangleContainer &rectangles, Mat &image)
 {
 	int ii = 0;
-	for(RectangleContainer::const_iterator it = rectangles.begin(); it != rectangles.end(); ++it)
+	for(RectangleContainer::const_iterator it = (rectangles.begin()++); it != rectangles.end(); ++it)
 	{
-		it->printCorners("");
+		if(debug_statements) it->printCorners("");
 		for(int i = 0; i < 4; i++)
 		{
 			if(i < 3) { ii = (i + 1); }
 			else { ii = 0; }
 			
+			//if(debug_statements) 
 			printf("Drawing edge: %d \n", i);
 			it->getCorners(i).print("");
 			

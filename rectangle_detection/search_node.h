@@ -32,6 +32,7 @@ class SearchNode
 		bool isRectangle(double, double) const;
 		bool matchCorners(const CornersContainer &) const;
 		bool matchIntersectToCorners(const Intersect &) const;
+		bool matchExistingSegments(const Intersect &) const;
 		IntersectsContainer findValidIntersects(const IntersectsContainer &) const;
 		SearchNode(Intersect, CornersContainer);
 		SearchNode();		
