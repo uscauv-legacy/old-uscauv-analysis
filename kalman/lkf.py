@@ -13,12 +13,12 @@ def main():
     T = 4
     D = T*50
     predict_sigma = .1 
-    update_sigma = 2
+    update_sigma = .1
     real_sigma = 1
      
     # Functions 
     t = np.linspace(0, T, D)
-    x = np.sin(2*np.pi*t) 
+    x = 2*np.pi*t
     z = [y + np.random.normal(0, real_sigma) for y in x] 
     
     mu = [0]
@@ -38,7 +38,7 @@ def main():
     ax1.plot(t,x, 'b')
     ax1.plot(t,z, 'g')
     ax1.plot(t,mu, 'r')
-    ax2.plot(t, sigm, 'b')
+    ax2.plot(t, sigma, 'b')
 
     plt.show()
     
